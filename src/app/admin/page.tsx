@@ -6,7 +6,7 @@ import { tournaments } from "@/db/schema";
 import { desc } from "drizzle-orm";
 
 export default async function AdminDashboard() {
-  let tournamentList = [];
+  let tournamentList: any[] = [];
   try {
       if (process.env.DATABASE_URL) {
         tournamentList = await db.select().from(tournaments).orderBy(desc(tournaments.startDate));
