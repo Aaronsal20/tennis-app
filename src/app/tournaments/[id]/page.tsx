@@ -101,10 +101,10 @@ export default async function TournamentDetailsPage({ params }: { params: Promis
       </div>
 
       <Tabs defaultValue="overview" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="overview">Overview & Registration</TabsTrigger>
-          <TabsTrigger value="fixtures">Fixtures & Results</TabsTrigger>
-          <TabsTrigger value="standings">Standings</TabsTrigger>
+        <TabsList className="flex flex-col sm:grid w-full sm:grid-cols-3 h-auto gap-2 sm:gap-0 bg-muted/50 p-1">
+          <TabsTrigger value="overview" className="w-full">Overview & Registration</TabsTrigger>
+          <TabsTrigger value="fixtures" className="w-full">Fixtures & Results</TabsTrigger>
+          <TabsTrigger value="standings" className="w-full">Standings</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="mt-6 space-y-8">

@@ -21,14 +21,14 @@ export function DateFilter() {
   }, [date, router, searchParams]);
 
   return (
-    <div className="flex items-center space-x-4 bg-card p-4 rounded-lg border shadow-sm">
+    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 bg-card p-4 rounded-lg border shadow-sm w-full md:w-auto">
       <Label htmlFor="date-filter" className="whitespace-nowrap font-medium">Select Date:</Label>
       <Input
         id="date-filter"
         type="date"
         value={date}
         onChange={(e) => setDate(e.target.value)}
-        className="w-auto"
+        className="w-full sm:w-auto"
       />
     </div>
   );
