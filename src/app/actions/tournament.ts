@@ -128,11 +128,13 @@ export async function updateMatchScore(matchId: number, data: any) {
       status,
   }).where(eq(matches.id, matchId));
 
-  const category = await db.query.categories.findFirst({
-    where: eq(categories.id, match.categoryId),
-  });
-  if (category) {
-    revalidatePath(`/admin/tournaments/${category.tournamentId}`);
+  if (match.categoryId) {
+    const category = await db.query.categories.findFirst({
+      where: eq(categories.id, match.categoryId),
+    });
+    if (category) {
+      revalidatePath(`/admin/tournaments/${category.tournamentId}`);
+    }
   }
 }
 
