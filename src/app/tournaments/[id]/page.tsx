@@ -1,6 +1,6 @@
 import { db } from "@/db";
-import { tournaments, categories, participants, users } from "@/db/schema";
-import { eq, and } from "drizzle-orm";
+import { tournaments, categories, participants, users, courtSlots } from "@/db/schema";
+import { eq, and, gte, lt, or } from "drizzle-orm";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -52,9 +52,42 @@ export default async function TournamentDetailsPage({ params }: { params: Promis
   // Fetch user's current participations in this tournament
   let userParticipations: number[] = [];
   if (user) {
-    const parts = await db.select().from(participants).where(eq(participants.userId, user.id));
+    const parts = await db.select().from(participants).where(
+      or(
+        eq(participants.userId, user.id),
+        eq(participants.partnerId, user.id)
+      )
+    );
     userParticipations = parts.map(p => p.categoryId).filter((id): id is number => id !== null);
   }
+
+  // Fetch upcoming fixtures (booked slots) for today and tomorrow
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  
+  const tomorrow = new Date(today);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  
+  const dayAfterTomorrow = new Date(tomorrow);
+  dayAfterTomorrow.setDate(dayAfterTomorrow.getDate() + 1);
+
+  const upcomingFixtures = await db.query.courtSlots.findMany({
+    where: and(
+      eq(courtSlots.tournamentId, tournamentId),
+      eq(courtSlots.isBooked, true),
+      gte(courtSlots.startTime, today),
+      lt(courtSlots.startTime, dayAfterTomorrow)
+    ),
+    with: {
+      bookedByUser: true,
+      opponent: true,
+      category: true,
+    },
+    orderBy: (courtSlots, { asc }) => [asc(courtSlots.startTime)],
+  });
+
+  const todayFixtures = upcomingFixtures.filter(f => f.startTime < tomorrow);
+  const tomorrowFixtures = upcomingFixtures.filter(f => f.startTime >= tomorrow);
 
   return (
     <div className="container mx-auto py-10 space-y-8">
@@ -74,50 +107,110 @@ export default async function TournamentDetailsPage({ params }: { params: Promis
           <TabsTrigger value="standings">Standings</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="overview" className="mt-6">
-          <h2 className="text-2xl font-bold mb-4">Available Categories</h2>
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {tournamentCategories.map((cat) => {
-                  const isJoined = userParticipations.includes(cat.id);
-                  return (
-                  <Card key={cat.id} className={isJoined ? "border-green-500 bg-green-50" : ""}>
-                      <CardHeader>
-                          <CardTitle className="flex justify-between items-center">
-                              {cat.name}
-                              {isJoined && <span className="text-xs bg-green-200 text-green-800 px-2 py-1 rounded">Joined</span>}
-                          </CardTitle>
-                          <CardDescription className="uppercase text-xs font-bold">{cat.type}</CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                          <p className="text-sm text-gray-500">
-                              {isJoined ? "You are registered for this category." : "Open for registration"}
-                          </p>
-                          <p className="text-xs text-muted-foreground mt-2">
-                            {cat.participants.length} participants
-                          </p>
-                      </CardContent>
-                      <CardFooter>
-                          {user ? (
-                              isJoined ? (
-                                  <Button disabled className="w-full bg-green-600 hover:bg-green-700">Registered</Button>
-                              ) : (
-                                  <JoinCategoryForm 
-                                    category={cat} 
-                                    userId={user.id} 
-                                    potentialPartners={potentialPartners} 
-                                  />
-                              )
-                          ) : (
-                              <Link href="/login" className="w-full">
-                                  <Button variant="outline" className="w-full">Login to Join</Button>
-                              </Link>
-                          )}
-                      </CardFooter>
-                  </Card>
-              )})}
-              {tournamentCategories.length === 0 && (
-                  <p className="text-gray-500">No categories available for this tournament yet.</p>
-              )}
+        <TabsContent value="overview" className="mt-6 space-y-8">
+          <div className="grid gap-6 md:grid-cols-2">
+            <Card>
+              <CardHeader>
+                <CardTitle>Today's Schedule</CardTitle>
+                <CardDescription>{today.toLocaleDateString()}</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {todayFixtures.length > 0 ? (
+                  <ul className="space-y-4">
+                    {todayFixtures.map((fixture) => (
+                      <li key={fixture.id} className="border-b pb-2 last:border-0 last:pb-0">
+                        <div className="font-semibold text-sm">
+                          {fixture.startTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - {fixture.courtName}
+                        </div>
+                        <div className="text-sm mt-1">
+                          <span className="text-primary">{fixture.bookedByUser?.name}</span> vs <span className="text-primary">{fixture.opponent?.name || "TBD"}</span>
+                        </div>
+                        <div className="text-xs text-muted-foreground mt-1">
+                          {fixture.category?.name}
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-sm text-muted-foreground">No matches scheduled for today.</p>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Tomorrow's Schedule</CardTitle>
+                <CardDescription>{tomorrow.toLocaleDateString()}</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {tomorrowFixtures.length > 0 ? (
+                  <ul className="space-y-4">
+                    {tomorrowFixtures.map((fixture) => (
+                      <li key={fixture.id} className="border-b pb-2 last:border-0 last:pb-0">
+                        <div className="font-semibold text-sm">
+                          {fixture.startTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - {fixture.courtName}
+                        </div>
+                        <div className="text-sm mt-1">
+                          <span className="text-primary">{fixture.bookedByUser?.name}</span> vs <span className="text-primary">{fixture.opponent?.name || "TBD"}</span>
+                        </div>
+                        <div className="text-xs text-muted-foreground mt-1">
+                          {fixture.category?.name}
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-sm text-muted-foreground">No matches scheduled for tomorrow.</p>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+
+          <div>
+            <h2 className="text-2xl font-bold mb-4">Available Categories</h2>
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {tournamentCategories.map((cat) => {
+                    const isJoined = userParticipations.includes(cat.id);
+                    return (
+                    <Card key={cat.id} className={isJoined ? "border-green-500 bg-green-50" : ""}>
+                        <CardHeader>
+                            <CardTitle className="flex justify-between items-center">
+                                {cat.name}
+                                {isJoined && <span className="text-xs bg-green-200 text-green-800 px-2 py-1 rounded">Joined</span>}
+                            </CardTitle>
+                            <CardDescription className="uppercase text-xs font-bold">{cat.type}</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <p className="text-sm text-gray-500">
+                                {isJoined ? "You are registered for this category." : "Open for registration"}
+                            </p>
+                            <p className="text-xs text-muted-foreground mt-2">
+                              {cat.participants.length} participants
+                            </p>
+                        </CardContent>
+                        <CardFooter>
+                            {user ? (
+                                isJoined ? (
+                                    <Button disabled className="w-full bg-green-600 hover:bg-green-700">Registered</Button>
+                                ) : (
+                                    <JoinCategoryForm 
+                                      category={cat} 
+                                      userId={user.id} 
+                                      potentialPartners={potentialPartners} 
+                                    />
+                                )
+                            ) : (
+                                <Link href="/login" className="w-full">
+                                    <Button variant="outline" className="w-full">Login to Join</Button>
+                                </Link>
+                            )}
+                        </CardFooter>
+                    </Card>
+                )})}
+                {tournamentCategories.length === 0 && (
+                    <p className="text-gray-500">No categories available for this tournament yet.</p>
+                )}
+            </div>
           </div>
         </TabsContent>
 

@@ -27,7 +27,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-gray-50 dark:bg-black`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-gray-50 dark:bg-black min-h-screen flex flex-col`}
       >
         <ThemeProvider
             attribute="class"
@@ -36,7 +36,12 @@ export default function RootLayout({
             disableTransitionOnChange
           >
           <Header />
-          {children}
+          <main className="flex-1">
+            {children}
+          </main>
+          <footer className="py-6 text-center text-sm text-muted-foreground border-t bg-background">
+            <p>Created by Aaron Saldanha</p>
+          </footer>
         </ThemeProvider>
       </body>
     </html>

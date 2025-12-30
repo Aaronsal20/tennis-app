@@ -17,10 +17,18 @@ export async function Header() {
           {user ? (
             <>
               <span className="text-sm text-gray-600 dark:text-gray-300 hidden sm:inline-block">Welcome, {user.name}</span>
+              <Link href="/book">
+                <Button variant="ghost">Book Court</Button>
+              </Link>
               {user.role === "admin" && (
-                <Link href="/admin">
-                  <Button variant="ghost">Admin</Button>
-                </Link>
+                <>
+                  <Link href="/admin">
+                    <Button variant="ghost">Admin</Button>
+                  </Link>
+                  <Link href="/admin/courts">
+                    <Button variant="ghost">Manage Courts</Button>
+                  </Link>
+                </>
               )}
               <form action={async () => {
                 "use server";

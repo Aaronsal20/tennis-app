@@ -21,12 +21,19 @@ export default function RegisterPage() {
     if (!email) return;
 
     // Check if user already exists (by email or phone)
-    const existingUser = await db.query.users.findFirst({
+    let existingUser = await db.query.users.findFirst({
       where: or(
         eq(users.email, email),
         phone ? eq(users.phone, phone) : undefined
       ),
     });
+
+    // If not found by email/phone, check by name to link guest accounts
+    if (!existingUser && name) {
+      existingUser = await db.query.users.findFirst({
+        where: eq(users.name, name),
+      });
+    }
 
     if (existingUser) {
       // Update existing user with new details (e.g. claiming a guest account)

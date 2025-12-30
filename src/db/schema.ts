@@ -1,4 +1,4 @@
-import { pgTable, serial, text, timestamp, integer } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, timestamp, integer, boolean } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 
 export const users = pgTable("users", {
@@ -61,8 +61,22 @@ export const matches = pgTable("tournament_matches", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const courtSlots = pgTable("court_slots", {
+  id: serial("id").primaryKey(),
+  tournamentId: integer("tournament_id").references(() => tournaments.id),
+  courtName: text("court_name").notNull(),
+  startTime: timestamp("start_time").notNull(),
+  endTime: timestamp("end_time").notNull(),
+  isBooked: boolean("is_booked").default(false),
+  bookedBy: integer("booked_by").references(() => users.id),
+  categoryId: integer("category_id").references(() => categories.id),
+  opponentId: integer("opponent_id").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 export const tournamentsRelations = relations(tournaments, ({ many }) => ({
   categories: many(categories),
+  courtSlots: many(courtSlots),
 }));
 
 export const categoriesRelations = relations(categories, ({ one, many }) => ({
@@ -103,5 +117,24 @@ export const matchesRelations = relations(matches, ({ one }) => ({
     fields: [matches.participant2Id],
     references: [participants.id],
     relationName: "participant2",
+  }),
+}));
+
+export const courtSlotsRelations = relations(courtSlots, ({ one }) => ({
+  tournament: one(tournaments, {
+    fields: [courtSlots.tournamentId],
+    references: [tournaments.id],
+  }),
+  bookedByUser: one(users, {
+    fields: [courtSlots.bookedBy],
+    references: [users.id],
+  }),
+  category: one(categories, {
+    fields: [courtSlots.categoryId],
+    references: [categories.id],
+  }),
+  opponent: one(users, {
+    fields: [courtSlots.opponentId],
+    references: [users.id],
   }),
 }));
