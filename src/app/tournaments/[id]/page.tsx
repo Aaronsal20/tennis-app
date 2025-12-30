@@ -53,7 +53,7 @@ export default async function TournamentDetailsPage({ params }: { params: Promis
   let userParticipations: number[] = [];
   if (user) {
     const parts = await db.select().from(participants).where(eq(participants.userId, user.id));
-    userParticipations = parts.map(p => p.categoryId);
+    userParticipations = parts.map(p => p.categoryId).filter((id): id is number => id !== null);
   }
 
   return (
