@@ -182,11 +182,11 @@ export default async function ManageTournamentPage({ params }: { params: Promise
                       {cat.participants.map((p) => (
                         <div key={p.id} className="flex items-center space-x-3 p-3 border rounded-md bg-muted/20">
                           <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs">
-                            {p.user.name?.substring(0, 2).toUpperCase()}
+                            {p.user?.name?.substring(0, 2).toUpperCase() ?? "??"}
                           </div>
                           <div className="overflow-hidden">
                             <p className="text-sm font-medium truncate">
-                              {p.user.name}
+                              {p.user?.name ?? "Unknown User"}
                               {p.partner && <span className="text-muted-foreground"> & {p.partner.name}</span>}
                             </p>
                           </div>
