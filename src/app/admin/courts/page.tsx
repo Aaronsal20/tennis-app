@@ -16,7 +16,7 @@ export default async function AdminCourtsPage() {
 
   const slots = await getCourtSlots();
   
-  let tournamentList = [];
+  let tournamentList: any[] = [];
   if (process.env.DATABASE_URL) {
     tournamentList = await db.select().from(tournaments).orderBy(desc(tournaments.startDate));
   }

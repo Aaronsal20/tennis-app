@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Menu, X } from "lucide-react";
-import { logout } from "@/lib/auth";
+import { logoutAction } from "@/app/actions/auth";
 
 interface MobileNavProps {
   user: any;
@@ -43,7 +43,7 @@ export function MobileNav({ user }: MobileNavProps) {
                 variant="outline" 
                 className="w-full justify-start"
                 onClick={async () => {
-                  await logout();
+                  await logoutAction();
                   setOpen(false);
                 }}
               >
