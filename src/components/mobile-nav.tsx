@@ -30,14 +30,20 @@ export function MobileNav({ user }: MobileNavProps) {
                 <Button variant="ghost" className="w-full justify-start">Book Court</Button>
               </Link>
               {user.role === "admin" && (
-                <>
+                <div className="space-y-1 pt-2 border-t">
+                  <div className="px-2 text-xs font-semibold text-muted-foreground uppercase">
+                    Admin Controls
+                  </div>
                   <Link href="/admin" onClick={() => setOpen(false)}>
-                    <Button variant="ghost" className="w-full justify-start">Admin Dashboard</Button>
+                    <Button variant="ghost" className="w-full justify-start pl-4">Manage Tournaments</Button>
                   </Link>
                   <Link href="/admin/courts" onClick={() => setOpen(false)}>
-                    <Button variant="ghost" className="w-full justify-start">Manage Courts</Button>
+                    <Button variant="ghost" className="w-full justify-start pl-4">Manage Courts</Button>
                   </Link>
-                </>
+                  <Link href="/admin/users" onClick={() => setOpen(false)}>
+                    <Button variant="ghost" className="w-full justify-start pl-4">Manage Users</Button>
+                  </Link>
+                </div>
               )}
               <Button 
                 variant="outline" 

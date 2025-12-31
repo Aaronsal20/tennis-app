@@ -8,6 +8,7 @@ import { users } from "@/db/schema";
 import { login, hashPassword } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { eq, or } from "drizzle-orm";
+import { createNotification } from "@/app/actions/notifications";
 
 export default function RegisterPage() {
   async function handleRegister(formData: FormData) {
@@ -57,6 +58,7 @@ export default function RegisterPage() {
       }).returning();
 
       if (newUser) {
+        await createNotification("registration", `New user registered: ${name || email}`, { userId: newUser.id });
         await login(newUser.id);
         redirect("/");
       }

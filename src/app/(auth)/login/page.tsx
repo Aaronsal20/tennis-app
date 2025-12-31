@@ -22,6 +22,10 @@ export default function LoginPage() {
     });
 
     if (user && user.password) {
+      if (!user.isActive) {
+        // Account disabled
+        return; 
+      }
       const isValid = await verifyPassword(password, user.password);
       if (isValid) {
         await login(user.id);

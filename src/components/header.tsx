@@ -3,6 +3,16 @@ import { Button } from "@/components/ui/button";
 import { getSession, logout } from "@/lib/auth";
 import { ModeToggle } from "@/components/mode-toggle";
 import { MobileNav } from "@/components/mobile-nav";
+import { Notifications } from "@/components/admin/Notifications";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { ChevronDown } from "lucide-react";
 
 export async function Header() {
   const user = await getSession();
@@ -16,6 +26,7 @@ export async function Header() {
         
         <div className="flex items-center gap-2">
           <ModeToggle />
+          {user?.role === "admin" && <Notifications />}
           
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-4">
@@ -26,14 +37,26 @@ export async function Header() {
                   <Button variant="ghost">Book Court</Button>
                 </Link>
                 {user.role === "admin" && (
-                  <>
-                    <Link href="/admin">
-                      <Button variant="ghost">Admin</Button>
-                    </Link>
-                    <Link href="/admin/courts">
-                      <Button variant="ghost">Manage Courts</Button>
-                    </Link>
-                  </>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost">
+                        Admin <ChevronDown className="ml-2 h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuLabel>Admin Controls</DropdownMenuLabel>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem asChild>
+                        <Link href="/admin" className="w-full cursor-pointer">Manage Tournaments</Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link href="/admin/courts" className="w-full cursor-pointer">Manage Courts</Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link href="/admin/users" className="w-full cursor-pointer">Manage Users</Link>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 )}
                 <form action={async () => {
                   "use server";

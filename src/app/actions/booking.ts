@@ -5,6 +5,7 @@ import { courtSlots, categories, participants, users } from "@/db/schema";
 import { eq, gte, and, lte, ne, or } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { getSession } from "@/lib/auth";
+import { createNotification } from "./notifications";
 
 export async function getCourtSlots(date?: Date) {
   try {
@@ -86,6 +87,8 @@ export async function bookCourtSlot(slotId: number, categoryId?: number, opponen
     categoryId,
     opponentId,
   }).where(eq(courtSlots.id, slotId));
+
+  await createNotification("booking", `New court booking by ${session.name} for ${slot.courtName}`, { slotId, userId: session.id });
 
   revalidatePath("/book");
   revalidatePath("/admin/courts");

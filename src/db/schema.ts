@@ -8,6 +8,7 @@ export const users = pgTable("users", {
   password: text("password"),
   phone: text("phone"),
   role: text("role").default("user").notNull(), // 'admin' or 'user'
+  isActive: boolean("is_active").default(true).notNull(),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -140,3 +141,12 @@ export const courtSlotsRelations = relations(courtSlots, ({ one }) => ({
     references: [users.id],
   }),
 }));
+
+export const notifications = pgTable("notifications", {
+  id: serial("id").primaryKey(),
+  type: text("type").notNull(), // 'registration', 'booking'
+  message: text("message").notNull(),
+  isRead: boolean("is_read").default(false).notNull(),
+  data: text("data"), // JSON string for extra data
+  createdAt: timestamp("created_at").defaultNow(),
+});
