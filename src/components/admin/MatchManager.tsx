@@ -157,7 +157,7 @@ export default function MatchManager({ category, matches }: { category: any, mat
               <div key={round} className="space-y-2">
                 <h4 className="text-sm font-semibold capitalize text-muted-foreground">{round.replace("-", " ")} Matches</h4>
                 <div className="grid gap-2">
-                  {roundMatches.map((match) => (
+                  {roundMatches.map((match: any) => (
                     <div key={match.id} className="border p-3 rounded flex justify-between items-center bg-card">
                       <div className="flex-1 grid grid-cols-2 gap-4">
                         <div className={match.winnerId === match.participant1Id ? "font-bold text-primary" : ""}>
