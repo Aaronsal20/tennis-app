@@ -5,6 +5,7 @@ export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   name: text("name"),
   email: text("email").notNull(),
+  password: text("password"),
   phone: text("phone"),
   role: text("role").default("user").notNull(), // 'admin' or 'user'
   createdAt: timestamp("created_at").defaultNow(),
@@ -44,6 +45,7 @@ export const matches = pgTable("tournament_matches", {
   participant1Id: integer("participant1_id").references(() => participants.id),
   participant2Id: integer("participant2_id").references(() => participants.id),
   date: timestamp("date"),
+  round: text("round").default("group"), // 'group', 'semi-final', 'final'
   status: text("status").default("pending"), // 'pending', 'completed'
   set1Player1: integer("set1_p1"),
   set1Player2: integer("set1_p2"),

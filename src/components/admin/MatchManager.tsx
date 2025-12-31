@@ -3,15 +3,36 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { generateFixtures, updateMatchScore } from "@/app/actions/tournament";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { generateFixtures, updateMatchScore, createMatch, generateSemiFinals, generateFinals } from "@/app/actions/tournament";
 
 export default function MatchManager({ category, matches }: { category: any, matches: any[] }) {
   const [editingMatch, setEditingMatch] = useState<any>(null);
   const [scores, setScores] = useState<any>({});
+  const [addMatchOpen, setAddMatchOpen] = useState(false);
+  const [selectedP1, setSelectedP1] = useState<string>("");
+  const [selectedP2, setSelectedP2] = useState<string>("");
 
   const handleGenerate = async () => {
     await generateFixtures(category.id);
+  };
+
+  const handleGenerateSemiFinals = async () => {
+    await generateSemiFinals(category.id);
+  };
+
+  const handleGenerateFinals = async () => {
+    await generateFinals(category.id);
+  };
+
+  const handleAddMatch = async () => {
+    if (!selectedP1 || !selectedP2 || selectedP1 === selectedP2) return;
+    await createMatch(category.id, parseInt(selectedP1), parseInt(selectedP2));
+    setAddMatchOpen(false);
+    setSelectedP1("");
+    setSelectedP2("");
   };
 
   const handleScoreChange = (field: string, value: string) => {
@@ -57,43 +78,115 @@ export default function MatchManager({ category, matches }: { category: any, mat
     });
   };
 
+  const groupedMatches = matches.reduce((acc, match) => {
+    const round = match.round || "group";
+    if (!acc[round]) acc[round] = [];
+    acc[round].push(match);
+    return acc;
+  }, {} as Record<string, any[]>);
+
+  const roundOrder = ["group", "semi-final", "final"];
+
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h3 className="font-medium">{category.name}</h3>
-        {matches.length === 0 && (
-          <Button onClick={handleGenerate} size="sm">Generate Fixtures</Button>
-        )}
+        <div className="flex gap-2">
+          <Dialog open={addMatchOpen} onOpenChange={setAddMatchOpen}>
+            <DialogTrigger asChild>
+              <Button size="sm" variant="outline">Add Match</Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Add Match</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <Label>Player 1</Label>
+                  <Select value={selectedP1} onValueChange={setSelectedP1}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select Player 1" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {category.participants.map((p: any) => (
+                        <SelectItem key={p.id} value={p.id.toString()}>
+                          {p.user?.name || "Unknown"} {p.partner ? `/ ${p.partner.name}` : ""}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Player 2</Label>
+                  <Select value={selectedP2} onValueChange={setSelectedP2}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select Player 2" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {category.participants.map((p: any) => (
+                        <SelectItem key={p.id} value={p.id.toString()}>
+                          {p.user?.name || "Unknown"} {p.partner ? `/ ${p.partner.name}` : ""}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <Button onClick={handleAddMatch} className="w-full">Create Match</Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+          {matches.length === 0 && (
+            <Button onClick={handleGenerate} size="sm">Generate Fixtures</Button>
+          )}
+          {matches.length > 0 && matches.some(m => m.status === 'completed') && !matches.some(m => m.round === 'semi-final') && (
+             <Button onClick={handleGenerateSemiFinals} size="sm" variant="secondary">Generate Semi-Finals</Button>
+          )}
+          {matches.some(m => m.round === 'semi-final' && m.status === 'completed') && !matches.some(m => m.round === 'final') && (
+             <Button onClick={handleGenerateFinals} size="sm" variant="secondary">Generate Final</Button>
+          )}
+        </div>
       </div>
 
       {matches.length > 0 ? (
-        <div className="grid gap-2">
-          {matches.map((match) => (
-            <div key={match.id} className="border p-3 rounded flex justify-between items-center bg-card">
-              <div className="flex-1 grid grid-cols-2 gap-4">
-                <div className={match.winnerId === match.participant1Id ? "font-bold text-primary" : ""}>
-                  {match.participant1.user.name}
-                  {match.participant1.partner && <span className="text-muted-foreground text-sm"> / {match.participant1.partner.name}</span>}
-                </div>
-                <div className={match.winnerId === match.participant2Id ? "font-bold text-primary" : ""}>
-                  {match.participant2.user.name}
-                  {match.participant2.partner && <span className="text-muted-foreground text-sm"> / {match.participant2.partner.name}</span>}
+        <div className="space-y-6">
+          {roundOrder.map((round) => {
+            const roundMatches = groupedMatches[round];
+            if (!roundMatches || roundMatches.length === 0) return null;
+            
+            return (
+              <div key={round} className="space-y-2">
+                <h4 className="text-sm font-semibold capitalize text-muted-foreground">{round.replace("-", " ")} Matches</h4>
+                <div className="grid gap-2">
+                  {roundMatches.map((match) => (
+                    <div key={match.id} className="border p-3 rounded flex justify-between items-center bg-card">
+                      <div className="flex-1 grid grid-cols-2 gap-4">
+                        <div className={match.winnerId === match.participant1Id ? "font-bold text-primary" : ""}>
+                          {match.participant1.user.name}
+                          {match.participant1.partner && <span className="text-muted-foreground text-sm"> / {match.participant1.partner.name}</span>}
+                        </div>
+                        <div className={match.winnerId === match.participant2Id ? "font-bold text-primary" : ""}>
+                          {match.participant2.user.name}
+                          {match.participant2.partner && <span className="text-muted-foreground text-sm"> / {match.participant2.partner.name}</span>}
+                        </div>
+                      </div>
+                      <div className="text-sm text-muted-foreground mx-4">
+                        {match.status === "completed" ? (
+                          <div className="flex gap-2">
+                            {formatSet(match.set1Player1, match.set1Player2, match.set1TiebreakPlayer1, match.set1TiebreakPlayer2)}
+                            {formatSet(match.set2Player1, match.set2Player2, match.set2TiebreakPlayer1, match.set2TiebreakPlayer2)}
+                            {formatSet(match.set3Player1, match.set3Player2, match.set3TiebreakPlayer1, match.set3TiebreakPlayer2)}
+                          </div>
+                        ) : "Pending"}
+                      </div>
+                      <Button variant="outline" size="sm" onClick={() => openScoreDialog(match)}>
+                        Score
+                      </Button>
+                    </div>
+                  ))}
                 </div>
               </div>
-              <div className="text-sm text-muted-foreground mx-4">
-                {match.status === "completed" ? (
-                  <div className="flex gap-2">
-                    {formatSet(match.set1Player1, match.set1Player2, match.set1TiebreakPlayer1, match.set1TiebreakPlayer2)}
-                    {formatSet(match.set2Player1, match.set2Player2, match.set2TiebreakPlayer1, match.set2TiebreakPlayer2)}
-                    {formatSet(match.set3Player1, match.set3Player2, match.set3TiebreakPlayer1, match.set3TiebreakPlayer2)}
-                  </div>
-                ) : "Pending"}
-              </div>
-              <Button variant="outline" size="sm" onClick={() => openScoreDialog(match)}>
-                Score
-              </Button>
-            </div>
-          ))}
+            );
+          })}
         </div>
       ) : (
         <p className="text-sm text-muted-foreground">No matches scheduled.</p>

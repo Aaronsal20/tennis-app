@@ -49,11 +49,6 @@ export default async function Home() {
               <p className="text-xl text-primary-foreground/90">
                 Join the ultimate tennis community. Register for tournaments, track your match scores, and climb the rankings.
               </p>
-              <div className="flex gap-4">
-                <Button size="lg" variant="secondary" className="font-bold">
-                  Find a Tournament
-                </Button>
-              </div>
             </div>
             <div className="hidden md:block mt-8 md:mt-0">
                {/* Tennis Racquet Icon */}

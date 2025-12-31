@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import Link from "next/link";
 import { db } from "@/db";
 import { users } from "@/db/schema";
-import { login } from "@/lib/auth";
+import { login, hashPassword } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { eq, or } from "drizzle-orm";
 
@@ -15,10 +15,11 @@ export default function RegisterPage() {
     const name = formData.get("name") as string;
     const email = formData.get("email") as string;
     const phone = formData.get("phone") as string;
-    // Password is ignored for this demo as we don't have a password field in DB yet
-    // In a real app, hash the password and store it.
+    const password = formData.get("password") as string;
 
-    if (!email) return;
+    if (!email || !password) return;
+
+    const hashedPassword = await hashPassword(password);
 
     // Check if user already exists (by email or phone)
     let existingUser = await db.query.users.findFirst({
@@ -41,6 +42,7 @@ export default function RegisterPage() {
         name,
         email, // Update email in case they matched by phone (replacing dummy email)
         phone,
+        password: hashedPassword,
       }).where(eq(users.id, existingUser.id));
 
       await login(existingUser.id);
@@ -51,6 +53,7 @@ export default function RegisterPage() {
         name,
         email,
         phone,
+        password: hashedPassword,
       }).returning();
 
       if (newUser) {

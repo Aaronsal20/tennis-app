@@ -6,9 +6,25 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { registerPlayer } from "@/app/actions/tournament";
+import { Check, ChevronsUpDown } from "lucide-react";
+import { cn } from "@/lib/utils";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 export default function AddParticipantForm({ categories, users }: { categories: any[], users: any[] }) {
   const [selectedUser, setSelectedUser] = useState<string>("");
+  const [open, setOpen] = useState(false);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [partners, setPartners] = useState<Record<string, string>>({});
 
@@ -57,18 +73,52 @@ export default function AddParticipantForm({ categories, users }: { categories: 
 
   return (
     <div className="space-y-4">
-      <div className="space-y-2">
+      <div className="space-y-2 flex flex-col">
         <Label>Select Player</Label>
-        <Select value={selectedUser} onValueChange={setSelectedUser}>
-          <SelectTrigger>
-            <SelectValue placeholder="Select Player" />
-          </SelectTrigger>
-          <SelectContent>
-            {users.map((u) => (
-              <SelectItem key={u.id} value={u.id.toString()}>{u.name}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <Popover open={open} onOpenChange={setOpen}>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              role="combobox"
+              aria-expanded={open}
+              className="w-full justify-between"
+            >
+              {selectedUser
+                ? users.find((user) => user.id.toString() === selectedUser)?.name
+                : "Select player..."}
+              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-[300px] p-0">
+            <Command>
+              <CommandInput placeholder="Search player..." />
+              <CommandList>
+                <CommandEmpty>No player found.</CommandEmpty>
+                <CommandGroup>
+                  {users.map((user) => (
+                    <CommandItem
+                      key={user.id}
+                      value={`${user.name || "Unknown"} ${user.id}`}
+                      disabled={false}
+                      onSelect={() => {
+                        setSelectedUser(user.id.toString())
+                        setOpen(false)
+                      }}
+                    >
+                      <Check
+                        className={cn(
+                          "mr-2 h-4 w-4",
+                          selectedUser === user.id.toString() ? "opacity-100" : "opacity-0"
+                        )}
+                      />
+                      {user.name || `User ${user.id}`}
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              </CommandList>
+            </Command>
+          </PopoverContent>
+        </Popover>
       </div>
 
       {selectedUser && (

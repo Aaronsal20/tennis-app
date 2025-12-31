@@ -11,7 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { revalidatePath } from "next/cache";
 import MatchManager from "@/components/admin/MatchManager";
 import AddParticipantForm from "@/components/admin/AddParticipantForm";
-import CreateGuestForm from "@/components/admin/CreateGuestForm";
+import CreateUserForm from "@/components/admin/CreateUserForm";
 
 const CATEGORY_OPTIONS = [
   "Men's Singles",
@@ -149,21 +149,21 @@ export default async function ManageTournamentPage({ params }: { params: Promise
           <div className="grid gap-6 md:grid-cols-2">
             <Card>
               <CardHeader>
-                <CardTitle>Add Existing User</CardTitle>
-                <CardDescription>Select a registered user to add.</CardDescription>
+                <CardTitle>Create New User</CardTitle>
+                <CardDescription>Add a new user to the system.</CardDescription>
               </CardHeader>
               <CardContent>
-                <AddParticipantForm categories={tournamentCategories} users={allUsers} />
+                <CreateUserForm />
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader>
-                <CardTitle>Create & Add Guest</CardTitle>
-                <CardDescription>Register a new player instantly.</CardDescription>
+                <CardTitle>Register User to Categories</CardTitle>
+                <CardDescription>Select an existing user and add them to categories.</CardDescription>
               </CardHeader>
               <CardContent>
-                <CreateGuestForm categories={tournamentCategories} users={allUsers} />
+                <AddParticipantForm categories={tournamentCategories} users={allUsers} />
               </CardContent>
             </Card>
           </div>

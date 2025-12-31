@@ -6,28 +6,33 @@ import Link from "next/link";
 import { db } from "@/db";
 import { users } from "@/db/schema";
 import { eq } from "drizzle-orm";
-import { login } from "@/lib/auth";
+import { login, verifyPassword } from "@/lib/auth";
 import { redirect } from "next/navigation";
 
 export default function LoginPage() {
   async function handleLogin(formData: FormData) {
     "use server";
     const email = formData.get("email") as string;
-    // Password ignored for demo
+    const password = formData.get("password") as string;
     
-    if (!email) return;
+    if (!email || !password) return;
 
     const user = await db.query.users.findFirst({
       where: eq(users.email, email),
     });
 
-    if (user) {
-      await login(user.id);
-      redirect("/");
-    } else {
-      // Handle error (user not found)
-      // For now, just redirect to register
-      redirect("/register");
+    if (user && user.password) {
+      const isValid = await verifyPassword(password, user.password);
+      if (isValid) {
+        await login(user.id);
+        redirect("/");
+      }
+    }
+    
+    // If login fails, we could redirect with an error or just stay on page
+    // For now, let's redirect to register if user not found, or just do nothing if password wrong
+    if (!user) {
+        redirect("/register");
     }
   }
 

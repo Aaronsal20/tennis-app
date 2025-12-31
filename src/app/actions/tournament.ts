@@ -63,6 +63,7 @@ export async function generateFixtures(categoryId: number) {
         participant1Id: parts[i].id,
         participant2Id: parts[j].id,
         status: "pending",
+        round: "group",
       });
     }
   }
@@ -171,11 +172,27 @@ export async function registerPlayer(
   }
 }
 
+export async function createUser(data: { name: string; email?: string; phone?: string }) {
+  if (!data.name) return;
+
+  const userEmail = data.email || `guest_${Date.now()}@tennis.app`;
+
+  await db.insert(users).values({
+    name: data.name,
+    email: userEmail,
+    phone: data.phone,
+    role: "user",
+  });
+  
+  revalidatePath("/admin");
+  revalidatePath("/admin/tournaments/[id]", "page"); // Attempt to invalidate dynamic routes
+}
+
 export async function createGuestAndRegister(
   guestDetails: { name: string; email?: string; phone?: string },
   registrations: { categoryId: number; partnerId?: number | null; newPartnerName?: string }[]
 ) {
-  if (!guestDetails.name || registrations.length === 0) return;
+  if (!guestDetails.name) return;
 
   // Generate dummy email if not provided
   const userEmail = guestDetails.email || `guest_${Date.now()}@tennis.app`;
@@ -187,27 +204,140 @@ export async function createGuestAndRegister(
     role: "user",
   }).returning();
 
-  // Process registrations to resolve new partners
-  const finalRegistrations = [];
-  for (const reg of registrations) {
-    let partnerId = reg.partnerId;
+  if (registrations.length > 0) {
+    // Process registrations to resolve new partners
+    const finalRegistrations = [];
+    for (const reg of registrations) {
+      let partnerId = reg.partnerId;
 
-    if (reg.newPartnerName) {
-       const partnerEmail = `guest_partner_${Date.now()}_${Math.random().toString(36).substring(7)}@tennis.app`;
-       const [newPartner] = await db.insert(users).values({
-         name: reg.newPartnerName,
-         email: partnerEmail,
-         role: "user",
-       }).returning();
-       partnerId = newPartner.id;
+      if (reg.newPartnerName) {
+         const partnerEmail = `guest_partner_${Date.now()}_${Math.random().toString(36).substring(7)}@tennis.app`;
+         const [newPartner] = await db.insert(users).values({
+           name: reg.newPartnerName,
+           email: partnerEmail,
+           role: "user",
+         }).returning();
+         partnerId = newPartner.id;
+      }
+
+      finalRegistrations.push({
+        categoryId: reg.categoryId,
+        partnerId: partnerId || null
+      });
     }
 
-    finalRegistrations.push({
-      categoryId: reg.categoryId,
-      partnerId: partnerId || null
-    });
+    await registerPlayer(newUser.id, finalRegistrations);
   }
+}
 
-  await registerPlayer(newUser.id, finalRegistrations);
+export async function createMatch(categoryId: number, participant1Id: number, participant2Id: number) {
+  await db.insert(matches).values({
+    categoryId,
+    participant1Id,
+    participant2Id,
+    status: "pending",
+  });
+
+  const category = await db.query.categories.findFirst({
+    where: eq(categories.id, categoryId),
+  });
+  if (category) {
+    revalidatePath(`/admin/tournaments/${category.tournamentId}`);
+  }
+}
+
+export async function generateSemiFinals(categoryId: number) {
+  // 1. Get all group matches
+  const groupMatches = await db.query.matches.findMany({
+    where: and(
+      eq(matches.categoryId, categoryId),
+      eq(matches.round, "group"),
+      eq(matches.status, "completed")
+    ),
+  });
+
+  // 2. Get all participants
+  const parts = await db.select().from(participants).where(eq(participants.categoryId, categoryId));
+  
+  // 3. Calculate standings
+  const stats: Record<number, { wins: number }> = {};
+  parts.forEach(p => {
+    stats[p.id] = { wins: 0 };
+  });
+
+  groupMatches.forEach(m => {
+    if (m.winnerId) {
+      if (stats[m.winnerId]) {
+        stats[m.winnerId].wins++;
+      }
+    }
+  });
+
+  // 4. Sort by wins
+  const sorted = parts.sort((a, b) => {
+    const statA = stats[a.id] || { wins: 0 };
+    const statB = stats[b.id] || { wins: 0 };
+    return statB.wins - statA.wins;
+  });
+
+  if (sorted.length < 4) return;
+
+  // 5. Create Semi-Finals (1 vs 4, 2 vs 3)
+  await db.insert(matches).values([
+    {
+      categoryId,
+      participant1Id: sorted[0].id,
+      participant2Id: sorted[3].id,
+      round: "semi-final",
+      status: "pending",
+    },
+    {
+      categoryId,
+      participant1Id: sorted[1].id,
+      participant2Id: sorted[2].id,
+      round: "semi-final",
+      status: "pending",
+    }
+  ]);
+
+  const category = await db.query.categories.findFirst({
+    where: eq(categories.id, categoryId),
+  });
+  if (category) {
+    revalidatePath(`/admin/tournaments/${category.tournamentId}`);
+  }
+}
+
+export async function generateFinals(categoryId: number) {
+  // 1. Get semi-final matches
+  const semiMatches = await db.query.matches.findMany({
+    where: and(
+      eq(matches.categoryId, categoryId),
+      eq(matches.round, "semi-final"),
+      eq(matches.status, "completed")
+    ),
+  });
+
+  if (semiMatches.length < 2) return;
+
+  // 2. Get winners
+  const winners = semiMatches.map(m => m.winnerId).filter(Boolean);
+  if (winners.length < 2) return;
+
+  // 3. Create Final
+  await db.insert(matches).values({
+    categoryId,
+    participant1Id: winners[0] as number,
+    participant2Id: winners[1] as number,
+    round: "final",
+    status: "pending",
+  });
+
+  const category = await db.query.categories.findFirst({
+    where: eq(categories.id, categoryId),
+  });
+  if (category) {
+    revalidatePath(`/admin/tournaments/${category.tournamentId}`);
+  }
 }
 

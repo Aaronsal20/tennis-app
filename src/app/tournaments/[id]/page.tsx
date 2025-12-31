@@ -89,6 +89,21 @@ export default async function TournamentDetailsPage({ params }: { params: Promis
   const todayFixtures = upcomingFixtures.filter(f => f.startTime < tomorrow);
   const tomorrowFixtures = upcomingFixtures.filter(f => f.startTime >= tomorrow);
 
+  const getDisplayName = (userId: number | undefined | null, categoryId: number | undefined | null) => {
+    if (!userId || !categoryId) return "TBD";
+    const category = tournamentCategories.find(c => c.id === categoryId);
+    if (!category) return "Unknown";
+
+    const participant = category.participants.find(p => p.userId === userId || p.partnerId === userId);
+    if (!participant) return "Unknown";
+
+    if (category.type === 'doubles' && participant.partner && participant.user) {
+      return `${participant.user.name} / ${participant.partner.name}`;
+    }
+    
+    return participant.user?.name || "Unknown";
+  };
+
   return (
     <div className="container mx-auto py-10 space-y-8">
       <div className="bg-white p-6 rounded-lg shadow-sm border">
@@ -123,7 +138,7 @@ export default async function TournamentDetailsPage({ params }: { params: Promis
                           {fixture.startTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - {fixture.courtName}
                         </div>
                         <div className="text-sm mt-1">
-                          <span className="text-primary">{fixture.bookedByUser?.name}</span> vs <span className="text-primary">{fixture.opponent?.name || "TBD"}</span>
+                          <span className="text-primary">{getDisplayName(fixture.bookedBy, fixture.categoryId)}</span> vs <span className="text-primary">{getDisplayName(fixture.opponentId, fixture.categoryId)}</span>
                         </div>
                         <div className="text-xs text-muted-foreground mt-1">
                           {fixture.category?.name}
@@ -151,7 +166,7 @@ export default async function TournamentDetailsPage({ params }: { params: Promis
                           {fixture.startTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - {fixture.courtName}
                         </div>
                         <div className="text-sm mt-1">
-                          <span className="text-primary">{fixture.bookedByUser?.name}</span> vs <span className="text-primary">{fixture.opponent?.name || "TBD"}</span>
+                          <span className="text-primary">{getDisplayName(fixture.bookedBy, fixture.categoryId)}</span> vs <span className="text-primary">{getDisplayName(fixture.opponentId, fixture.categoryId)}</span>
                         </div>
                         <div className="text-xs text-muted-foreground mt-1">
                           {fixture.category?.name}
