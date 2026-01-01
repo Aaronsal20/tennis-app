@@ -55,6 +55,9 @@ export async function Header() {
                       <DropdownMenuItem asChild>
                         <Link href="/admin/users" className="w-full cursor-pointer">Manage Users</Link>
                       </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link href="/admin/notices" className="w-full cursor-pointer">Manage Notices</Link>
+                      </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 )}

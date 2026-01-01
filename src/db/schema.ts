@@ -78,6 +78,25 @@ export const courtSlots = pgTable("court_slots", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// export const courtBookings = pgTable("court_bookings", {
+//   id: serial("id").primaryKey(),
+//   courtId: integer("court_id").references(() => courts.id),
+//   userId: integer("user_id").references(() => users.id),
+//   date: timestamp("date").notNull(),
+//   startTime: text("start_time").notNull(),
+//   endTime: text("end_time").notNull(),
+//   isBooked: boolean("is_booked").default(false).notNull(),
+//   createdAt: timestamp("created_at").defaultNow(),
+// });
+
+export const notices = pgTable("notices", {
+  id: serial("id").primaryKey(),
+  content: text("content").notNull(),
+  isActive: boolean("is_active").default(true).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 export const tournamentsRelations = relations(tournaments, ({ many }) => ({
   categories: many(categories),
   courtSlots: many(courtSlots),
@@ -151,3 +170,9 @@ export const notifications = pgTable("notifications", {
   data: text("data"), // JSON string for extra data
   createdAt: timestamp("created_at").defaultNow(),
 });
+
+export const usersRelations = relations(users, ({ many }) => ({
+  participants: many(participants),
+  courtSlots: many(courtSlots),
+  notifications: many(notifications),
+}));

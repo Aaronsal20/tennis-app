@@ -4,7 +4,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { db } from "@/db";
 import { tournaments } from "@/db/schema";
 import { desc } from "drizzle-orm";
-import { Trophy, Calendar, MapPin } from "lucide-react";
+import { Trophy, Calendar, MapPin, AlertCircle } from "lucide-react";
+import { getActiveNotice } from "@/app/actions/notices";
 
 async function getTournaments() {
   try {
@@ -20,6 +21,7 @@ async function getTournaments() {
 
 export default async function Home() {
   const allTournaments = await getTournaments();
+  const activeNotice = await getActiveNotice();
 
   const now = new Date();
   const upcoming = allTournaments.filter(t => new Date(t.startDate) > now);
@@ -66,6 +68,22 @@ export default async function Home() {
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-16">
         
+        {activeNotice && (
+          <div className="bg-yellow-50 border-l-4 border-yellow-500 p-4 rounded-r shadow-sm">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <AlertCircle className="h-5 w-5 text-yellow-500" />
+              </div>
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-yellow-800">Notice</h3>
+                <div className="mt-2 text-sm text-yellow-700">
+                  <p>{activeNotice.content}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Ongoing Section */}
         {ongoing.length > 0 && (
           <section>
