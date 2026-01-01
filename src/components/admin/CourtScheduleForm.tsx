@@ -9,6 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { toast } from "sonner";
 
 import { Plus, Trash2 } from "lucide-react";
 
@@ -83,9 +84,10 @@ export function CourtScheduleForm({ tournaments }: { tournaments: any[] }) {
     setLoading(true);
     try {
       const name = formData.get("name") as string;
-      const startDate = new Date(formData.get("startDate") as string);
-      const endDate = new Date(formData.get("endDate") as string);
+      const startDate = formData.get("startDate") as string;
+      const endDate = formData.get("endDate") as string;
       const duration = Number(formData.get("duration"));
+      const timezoneOffset = new Date().getTimezoneOffset();
 
       const formattedSchedules = schedules.map(s => {
         const times = s.timeSlots
@@ -96,7 +98,7 @@ export function CourtScheduleForm({ tournaments }: { tournaments: any[] }) {
       }).filter(s => s.days.length > 0 && s.times.length > 0);
 
       if (formattedSchedules.length === 0) {
-        alert("Please add at least one valid schedule configuration.");
+        toast.error("Please add at least one valid schedule configuration.");
         setLoading(false);
         return;
       }
@@ -107,12 +109,13 @@ export function CourtScheduleForm({ tournaments }: { tournaments: any[] }) {
         endDate, 
         formattedSchedules, 
         duration, 
+        timezoneOffset,
         selectedTournamentId ? Number(selectedTournamentId) : undefined
       );
-      alert("Schedule created successfully!");
+      toast.success("Schedule created successfully!");
     } catch (error) {
       console.error(error);
-      alert("Failed to create schedule");
+      toast.error("Failed to create schedule");
     } finally {
       setLoading(false);
     }

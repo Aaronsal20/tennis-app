@@ -4,7 +4,9 @@ import { BookingForm } from "@/components/booking/BookingForm";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getSession } from "@/lib/auth";
+import { TimeDisplay } from "@/components/TimeDisplay";
 import { redirect } from "next/navigation";
+import { AutoRefresh } from "@/components/AutoRefresh";
 
 export default async function BookingPage({
   searchParams,
@@ -17,12 +19,16 @@ export default async function BookingPage({
   }
 
   const { date } = await searchParams;
-  const slots = await getCourtSlots(date ? new Date(date) : undefined);
+  const allSlots = await getCourtSlots(date ? new Date(date) : undefined);
+  // Only show active slots to users, unless they booked it (in case it was disabled after booking)
+  const slots = allSlots.filter(s => s.isActive || s.bookedBy === session.id);
+  
   const myBookings = slots.filter(s => s.bookedBy === session.id);
   const otherSlots = slots.filter(s => s.bookedBy !== session.id);
 
   return (
     <div className="container mx-auto py-10 space-y-8">
+      <AutoRefresh />
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <h1 className="text-3xl font-bold">Book a Court</h1>
         <DateFilter />
@@ -38,7 +44,7 @@ export default async function BookingPage({
                   <CardTitle>{slot.courtName}</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p>{slot.startTime.toLocaleString()} - {slot.endTime.toLocaleTimeString()}</p>
+                  <p><TimeDisplay date={slot.startTime} format="datetime" /> - <TimeDisplay date={slot.endTime} format="time" /></p>
                   <form action={async () => {
                     "use server";
                     await cancelBooking(slot.id);
@@ -64,7 +70,7 @@ export default async function BookingPage({
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p>{slot.startTime.toLocaleString()} - {slot.endTime.toLocaleTimeString()}</p>
+                <p><TimeDisplay date={slot.startTime} format="datetime" /> - <TimeDisplay date={slot.endTime} format="time" /></p>
                 {slot.isBooked ? (
                   <Button disabled className="mt-4 w-full" variant="secondary">Booked</Button>
                 ) : (

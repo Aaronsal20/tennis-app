@@ -3,7 +3,7 @@
 import { db } from "@/db";
 import { tournaments, categories, participants, matches, users } from "@/db/schema";
 import { redirect } from "next/navigation";
-import { eq, and } from "drizzle-orm";
+import { eq, and, or } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 
 export type CategoryInput = {
@@ -146,11 +146,14 @@ export async function registerPlayer(
   if (!userId || registrations.length === 0) return;
 
   for (const reg of registrations) {
-    // Check if user is already in this category
+    // Check if user is already in this category (as user or partner)
     const existing = await db.query.participants.findFirst({
       where: and(
         eq(participants.categoryId, reg.categoryId),
-        eq(participants.userId, userId)
+        or(
+          eq(participants.userId, userId),
+          eq(participants.partnerId, userId)
+        )
       )
     });
 

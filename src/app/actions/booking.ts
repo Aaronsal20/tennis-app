@@ -56,6 +56,17 @@ export async function createCourtSlot(courtName: string, startTime: Date, endTim
   revalidatePath("/admin/courts");
 }
 
+export async function toggleCourtSlotStatus(id: number, isActive: boolean) {
+  const session = await getSession();
+  if (!session || session.role !== "admin") {
+    throw new Error("Unauthorized");
+  }
+
+  await db.update(courtSlots).set({ isActive }).where(eq(courtSlots.id, id));
+  revalidatePath("/book");
+  revalidatePath("/admin/courts");
+}
+
 export async function deleteCourtSlot(id: number) {
   const session = await getSession();
   if (!session || session.role !== "admin") {
@@ -73,21 +84,35 @@ export async function bookCourtSlot(slotId: number, categoryId?: number, opponen
     throw new Error("Unauthorized");
   }
 
-  // Check if already booked
-  const slot = await db.query.courtSlots.findFirst({
-    where: eq(courtSlots.id, slotId),
-  });
+  // Attempt to book the slot atomically
+  // We check for isBooked = false AND isActive = true to prevent race conditions
+  const updated = await db.update(courtSlots)
+    .set({
+      isBooked: true,
+      bookedBy: session.id,
+      categoryId,
+      opponentId,
+    })
+    .where(and(
+      eq(courtSlots.id, slotId), 
+      eq(courtSlots.isBooked, false),
+      eq(courtSlots.isActive, true)
+    ))
+    .returning({ id: courtSlots.id, courtName: courtSlots.courtName });
 
-  if (!slot) throw new Error("Slot not found");
-  if (slot.isBooked) throw new Error("Slot already booked");
+  if (updated.length === 0) {
+    // Check why it failed to give a better error message
+    const slot = await db.query.courtSlots.findFirst({
+      where: eq(courtSlots.id, slotId),
+    });
 
-  await db.update(courtSlots).set({
-    isBooked: true,
-    bookedBy: session.id,
-    categoryId,
-    opponentId,
-  }).where(eq(courtSlots.id, slotId));
+    if (!slot) throw new Error("Slot not found");
+    if (!slot.isActive) throw new Error("Slot is currently disabled");
+    if (slot.isBooked) throw new Error("Slot already booked");
+    throw new Error("Failed to book slot");
+  }
 
+  const slot = updated[0];
   await createNotification("booking", `New court booking by ${session.name} for ${slot.courtName}`, { slotId, userId: session.id });
 
   revalidatePath("/book");
@@ -174,10 +199,11 @@ export async function cancelBooking(slotId: number) {
 
 export async function createCourtSchedule(
   courtName: string,
-  startDate: Date,
-  endDate: Date,
+  startDateStr: string,
+  endDateStr: string,
   schedules: { days: number[], times: string[] }[],
   durationMinutes: number,
+  timezoneOffset: number,
   tournamentId?: number
 ) {
   const session = await getSession();
@@ -186,15 +212,14 @@ export async function createCourtSchedule(
   }
 
   const slotsToInsert: any[] = [];
-  let currentDate = new Date(startDate);
-  const end = new Date(endDate);
-
-  // Normalize dates to start of day to avoid time issues
-  currentDate.setHours(0, 0, 0, 0);
-  end.setHours(0, 0, 0, 0);
+  
+  // Parse dates as UTC to avoid server timezone issues
+  // Treat these as "Local Date 00:00" represented in UTC
+  let currentDate = new Date(startDateStr + "T00:00:00Z");
+  const end = new Date(endDateStr + "T00:00:00Z");
 
   while (currentDate <= end) {
-    const dayOfWeek = currentDate.getDay();
+    const dayOfWeek = currentDate.getUTCDay(); // Use UTC day since we forced UTC
     
     // Find a schedule that matches this day
     const schedule = schedules.find(s => s.days.includes(dayOfWeek));
@@ -203,22 +228,27 @@ export async function createCourtSchedule(
       for (const time of schedule.times) {
         const [hours, minutes] = time.split(':').map(Number);
         
-        const slotStart = new Date(currentDate);
-        slotStart.setHours(hours, minutes, 0, 0);
+        // Create "Local Time" in UTC container
+        const slotStartLocal = new Date(currentDate);
+        slotStartLocal.setUTCHours(hours, minutes, 0, 0);
         
-        const slotEnd = new Date(slotStart);
-        slotEnd.setMinutes(slotEnd.getMinutes() + durationMinutes);
+        // Apply timezone offset to get real UTC
+        // timezoneOffset is (UTC - Local) in minutes.
+        // So UTC = Local + offset.
+        const slotStartUTC = new Date(slotStartLocal.getTime() + timezoneOffset * 60000);
+        
+        const slotEndUTC = new Date(slotStartUTC.getTime() + durationMinutes * 60000);
 
         slotsToInsert.push({
           courtName,
-          startTime: slotStart,
-          endTime: slotEnd,
+          startTime: slotStartUTC,
+          endTime: slotEndUTC,
           tournamentId,
         });
       }
     }
     // Next day
-    currentDate.setDate(currentDate.getDate() + 1);
+    currentDate.setUTCDate(currentDate.getUTCDate() + 1);
   }
 
   if (slotsToInsert.length > 0) {

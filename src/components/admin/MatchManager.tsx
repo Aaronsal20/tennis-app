@@ -215,11 +215,11 @@ export default function MatchManager({ category, matches }: { category: any, mat
               <div className="text-sm font-medium">Set 1</div>
               <div className="flex gap-1">
                 <Input type="number" placeholder="G" value={scores.set1Player1 ?? ""} onChange={(e) => handleScoreChange("set1Player1", e.target.value)} />
-                <Input type="number" placeholder="TB" className="w-12 text-xs" value={scores.set1TiebreakPlayer1 ?? ""} onChange={(e) => handleScoreChange("set1TiebreakPlayer1", e.target.value)} />
+                <Input type="number" placeholder="TB" className="w-16 text-xs px-1 text-center" value={scores.set1TiebreakPlayer1 ?? ""} onChange={(e) => handleScoreChange("set1TiebreakPlayer1", e.target.value)} />
               </div>
               <div className="flex gap-1">
                 <Input type="number" placeholder="G" value={scores.set1Player2 ?? ""} onChange={(e) => handleScoreChange("set1Player2", e.target.value)} />
-                <Input type="number" placeholder="TB" className="w-12 text-xs" value={scores.set1TiebreakPlayer2 ?? ""} onChange={(e) => handleScoreChange("set1TiebreakPlayer2", e.target.value)} />
+                <Input type="number" placeholder="TB" className="w-16 text-xs px-1 text-center" value={scores.set1TiebreakPlayer2 ?? ""} onChange={(e) => handleScoreChange("set1TiebreakPlayer2", e.target.value)} />
               </div>
             </div>
 
@@ -228,11 +228,11 @@ export default function MatchManager({ category, matches }: { category: any, mat
               <div className="text-sm font-medium">Set 2</div>
               <div className="flex gap-1">
                 <Input type="number" placeholder="G" value={scores.set2Player1 ?? ""} onChange={(e) => handleScoreChange("set2Player1", e.target.value)} />
-                <Input type="number" placeholder="TB" className="w-12 text-xs" value={scores.set2TiebreakPlayer1 ?? ""} onChange={(e) => handleScoreChange("set2TiebreakPlayer1", e.target.value)} />
+                <Input type="number" placeholder="TB" className="w-16 text-xs px-1 text-center" value={scores.set2TiebreakPlayer1 ?? ""} onChange={(e) => handleScoreChange("set2TiebreakPlayer1", e.target.value)} />
               </div>
               <div className="flex gap-1">
                 <Input type="number" placeholder="G" value={scores.set2Player2 ?? ""} onChange={(e) => handleScoreChange("set2Player2", e.target.value)} />
-                <Input type="number" placeholder="TB" className="w-12 text-xs" value={scores.set2TiebreakPlayer2 ?? ""} onChange={(e) => handleScoreChange("set2TiebreakPlayer2", e.target.value)} />
+                <Input type="number" placeholder="TB" className="w-16 text-xs px-1 text-center" value={scores.set2TiebreakPlayer2 ?? ""} onChange={(e) => handleScoreChange("set2TiebreakPlayer2", e.target.value)} />
               </div>
             </div>
 
@@ -241,11 +241,11 @@ export default function MatchManager({ category, matches }: { category: any, mat
               <div className="text-sm font-medium">Set 3</div>
               <div className="flex gap-1">
                 <Input type="number" placeholder="G" value={scores.set3Player1 ?? ""} onChange={(e) => handleScoreChange("set3Player1", e.target.value)} />
-                <Input type="number" placeholder="TB" className="w-12 text-xs" value={scores.set3TiebreakPlayer1 ?? ""} onChange={(e) => handleScoreChange("set3TiebreakPlayer1", e.target.value)} />
+                <Input type="number" placeholder="TB" className="w-16 text-xs px-1 text-center" value={scores.set3TiebreakPlayer1 ?? ""} onChange={(e) => handleScoreChange("set3TiebreakPlayer1", e.target.value)} />
               </div>
               <div className="flex gap-1">
                 <Input type="number" placeholder="G" value={scores.set3Player2 ?? ""} onChange={(e) => handleScoreChange("set3Player2", e.target.value)} />
-                <Input type="number" placeholder="TB" className="w-12 text-xs" value={scores.set3TiebreakPlayer2 ?? ""} onChange={(e) => handleScoreChange("set3TiebreakPlayer2", e.target.value)} />
+                <Input type="number" placeholder="TB" className="w-16 text-xs px-1 text-center" value={scores.set3TiebreakPlayer2 ?? ""} onChange={(e) => handleScoreChange("set3TiebreakPlayer2", e.target.value)} />
               </div>
             </div>
             

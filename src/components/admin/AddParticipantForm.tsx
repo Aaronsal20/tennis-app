@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -27,6 +27,33 @@ export default function AddParticipantForm({ categories, users }: { categories: 
   const [open, setOpen] = useState(false);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [partners, setPartners] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    if (selectedUser) {
+      const userId = parseInt(selectedUser);
+      const newSelectedCategories: string[] = [];
+      const newPartners: Record<string, string> = {};
+
+      categories.forEach(cat => {
+        const participant = cat.participants.find((p: any) => p.userId === userId || p.partnerId === userId);
+        if (participant) {
+          newSelectedCategories.push(cat.id.toString());
+          
+          if (participant.userId === userId && participant.partnerId) {
+            newPartners[cat.id.toString()] = participant.partnerId.toString();
+          } else if (participant.partnerId === userId) {
+            newPartners[cat.id.toString()] = participant.userId.toString();
+          }
+        }
+      });
+
+      setSelectedCategories(newSelectedCategories);
+      setPartners(newPartners);
+    } else {
+      setSelectedCategories([]);
+      setPartners({});
+    }
+  }, [selectedUser, categories]);
 
   const handleCategoryChange = (checked: boolean, catId: string) => {
     if (checked) {

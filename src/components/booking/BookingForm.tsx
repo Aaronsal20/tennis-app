@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { bookCourtSlot, getTournamentCategories, getCategoryParticipants } from "@/app/actions/booking";
+import { toast } from "sonner";
 
 interface BookingFormProps {
   slotId: number;
@@ -73,9 +74,10 @@ export function BookingForm({ slotId, tournamentId, currentUserId }: BookingForm
         selectedOpponent ? parseInt(selectedOpponent) : undefined
       );
       setOpen(false);
+      toast.success("Slot booked successfully!");
     } catch (e) {
       console.error(e);
-      alert("Failed to book slot");
+      toast.error("Failed to book slot");
     } finally {
       setLoading(false);
     }

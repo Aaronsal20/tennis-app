@@ -10,7 +10,9 @@ import JoinCategoryForm from "@/components/tournament/JoinCategoryForm";
 import StandingsTable from "@/components/tournament/StandingsTable";
 import PublicMatchList from "@/components/tournament/PublicMatchList";
 
-export default async function TournamentDetailsPage({ params }: { params: Promise<{ id: string }> }) {
+import { TimeDisplay } from "@/components/TimeDisplay";
+
+export default async function TournamentPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const tournamentId = parseInt(id);
   const user = await getSession();
@@ -135,7 +137,7 @@ export default async function TournamentDetailsPage({ params }: { params: Promis
                     {todayFixtures.map((fixture) => (
                       <li key={fixture.id} className="border-b pb-2 last:border-0 last:pb-0">
                         <div className="font-semibold text-sm">
-                          {fixture.startTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - {fixture.courtName}
+                          <TimeDisplay date={fixture.startTime} format="time" /> - {fixture.courtName}
                         </div>
                         <div className="text-sm mt-1">
                           <span className="text-primary">{getDisplayName(fixture.bookedBy, fixture.categoryId)}</span> vs <span className="text-primary">{getDisplayName(fixture.opponentId, fixture.categoryId)}</span>
@@ -163,7 +165,7 @@ export default async function TournamentDetailsPage({ params }: { params: Promis
                     {tomorrowFixtures.map((fixture) => (
                       <li key={fixture.id} className="border-b pb-2 last:border-0 last:pb-0">
                         <div className="font-semibold text-sm">
-                          {fixture.startTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - {fixture.courtName}
+                          <TimeDisplay date={fixture.startTime} format="time" /> - {fixture.courtName}
                         </div>
                         <div className="text-sm mt-1">
                           <span className="text-primary">{getDisplayName(fixture.bookedBy, fixture.categoryId)}</span> vs <span className="text-primary">{getDisplayName(fixture.opponentId, fixture.categoryId)}</span>

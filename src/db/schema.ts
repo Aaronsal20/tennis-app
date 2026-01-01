@@ -71,6 +71,7 @@ export const courtSlots = pgTable("court_slots", {
   startTime: timestamp("start_time").notNull(),
   endTime: timestamp("end_time").notNull(),
   isBooked: boolean("is_booked").default(false),
+  isActive: boolean("is_active").default(true).notNull(),
   bookedBy: integer("booked_by").references(() => users.id),
   categoryId: integer("category_id").references(() => categories.id),
   opponentId: integer("opponent_id").references(() => users.id),
