@@ -3,8 +3,9 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Menu, X } from "lucide-react";
+import { Menu, X, Download } from "lucide-react";
 import { logoutAction } from "@/app/actions/auth";
+import { InstallPWA } from "@/components/install-pwa";
 
 interface MobileNavProps {
   user: any;
@@ -21,6 +22,9 @@ export function MobileNav({ user }: MobileNavProps) {
 
       {open && (
         <div className="absolute top-16 left-0 right-0 bg-background border-b shadow-lg p-4 z-50 flex flex-col space-y-4">
+          <div className="px-2">
+             <InstallPWA />
+          </div>
           {user ? (
             <>
               <div className="text-sm font-medium text-muted-foreground px-2">

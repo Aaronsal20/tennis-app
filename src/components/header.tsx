@@ -13,6 +13,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ChevronDown } from "lucide-react";
+import { InstallPWA } from "@/components/install-pwa";
 
 export async function Header() {
   const user = await getSession();
@@ -25,6 +26,7 @@ export async function Header() {
         </Link>
         
         <div className="flex items-center gap-2">
+          <InstallPWA />
           <ModeToggle />
           {user?.role === "admin" && <Notifications />}
           
