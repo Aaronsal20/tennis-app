@@ -41,9 +41,7 @@ export default function RootLayout({
             {children}
           </main>
           <Toaster richColors />
-          <footer className="py-6 text-center text-sm text-muted-foreground border-t bg-background">
-            <p>Created by Aaron Saldanha</p>
-          </footer>
+
         </ThemeProvider>
       </body>
     </html>
