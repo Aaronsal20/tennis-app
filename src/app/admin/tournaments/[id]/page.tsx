@@ -14,9 +14,9 @@ import AddParticipantForm from "@/components/admin/AddParticipantForm";
 import CreateUserForm from "@/components/admin/CreateUserForm";
 
 const CATEGORY_OPTIONS = [
-  "Men's Singles",
-  "40+ Men",
-  "Men's Doubles",
+  "Mens Singles",
+  "Mens 40+ Singles",
+  "Mens Doubles",
   "Boys Singles",
   "Doubles",
   "Mixed Doubles",

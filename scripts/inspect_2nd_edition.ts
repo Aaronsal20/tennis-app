@@ -5,7 +5,7 @@ import * as path from 'path';
 const filePath = path.join(process.cwd(), '2nd edition.xlsx');
 const workbook = xlsx.readFile(filePath);
 
-const sheetName = 'Mens Doubles';
+const sheetName = 'Contact Details';
 const sheet = workbook.Sheets[sheetName];
 
 // Convert sheet to JSON to see the structure
