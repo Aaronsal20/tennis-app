@@ -5,20 +5,23 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import Link from "next/link";
 import { db } from "@/db";
 import { users } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, or } from "drizzle-orm";
 import { login, verifyPassword } from "@/lib/auth";
 import { redirect } from "next/navigation";
 
 export default function LoginPage() {
   async function handleLogin(formData: FormData) {
     "use server";
-    const email = formData.get("email") as string;
+    const identifier = formData.get("identifier") as string;
     const password = formData.get("password") as string;
     
-    if (!email || !password) return;
+    if (!identifier || !password) return;
 
     const user = await db.query.users.findFirst({
-      where: eq(users.email, email),
+      where: or(
+        eq(users.email, identifier),
+        eq(users.phone, identifier)
+      ),
     });
 
     if (user && user.password) {
@@ -46,15 +49,15 @@ export default function LoginPage() {
         <CardHeader>
           <CardTitle className="text-2xl font-bold text-center">Login</CardTitle>
           <CardDescription className="text-center">
-            Enter your email and password to access your account
+            Enter your email or phone and password to access your account
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form action={handleLogin}>
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input id="email" name="email" type="email" placeholder="m@example.com" required />
+                <Label htmlFor="identifier">Email or Phone</Label>
+                <Input id="identifier" name="identifier" type="text" placeholder="Email or Phone Number" required />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="password">Password</Label>

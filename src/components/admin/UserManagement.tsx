@@ -67,7 +67,7 @@ export default function UserManagement({ users }: { users: any[] }) {
           <TableHeader>
             <TableRow>
               <TableHead>Name</TableHead>
-              <TableHead>Email</TableHead>
+              <TableHead>Contact</TableHead>
               <TableHead>Role</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="text-right">Actions</TableHead>
@@ -77,7 +77,7 @@ export default function UserManagement({ users }: { users: any[] }) {
             {users.map((user) => (
               <TableRow key={user.id}>
                 <TableCell className="font-medium">{user.name}</TableCell>
-                <TableCell>{user.email}</TableCell>
+                <TableCell>{user.email || user.phone}</TableCell>
                 <TableCell>
                   <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                     user.role === 'admin' ? 'bg-purple-100 text-purple-800' : 'bg-gray-100 text-gray-800'
@@ -102,8 +102,8 @@ export default function UserManagement({ users }: { users: any[] }) {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                      <DropdownMenuItem onClick={() => navigator.clipboard.writeText(user.email)}>
-                        Copy Email
+                      <DropdownMenuItem onClick={() => navigator.clipboard.writeText(user.email || user.phone || "")}>
+                        Copy Contact
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem onClick={() => handleStatusToggle(user)}>

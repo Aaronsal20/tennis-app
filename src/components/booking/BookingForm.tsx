@@ -130,7 +130,7 @@ export function BookingForm({ slotId, tournamentId, currentUserId }: BookingForm
                 <SelectContent>
                   {participants.map((user) => (
                     <SelectItem key={user.id} value={user.id.toString()}>
-                      {user.name || user.email}
+                      {user.name || user.email || user.phone}
                     </SelectItem>
                   ))}
                 </SelectContent>

@@ -72,11 +72,47 @@ export default async function ManageTournamentPage({ params }: { params: Promise
     revalidatePath(`/admin/tournaments/${tournamentId}`);
   }
 
+  async function endTournament() {
+    "use server";
+    await db.update(tournaments)
+      .set({ status: "completed" })
+      .where(eq(tournaments.id, tournamentId));
+    revalidatePath(`/admin/tournaments/${tournamentId}`);
+  }
+
+  async function reopenTournament() {
+    "use server";
+    await db.update(tournaments)
+      .set({ status: "ongoing" })
+      .where(eq(tournaments.id, tournamentId));
+    revalidatePath(`/admin/tournaments/${tournamentId}`);
+  }
+
   return (
     <div className="container mx-auto py-10 space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold">{tournament.name}</h1>
-        <p className="text-gray-500">{tournament.location} • {new Date(tournament.startDate).toLocaleDateString()}</p>
+      <div className="flex justify-between items-start">
+        <div>
+          <h1 className="text-3xl font-bold">{tournament.name}</h1>
+          <p className="text-gray-500">{tournament.location} • {new Date(tournament.startDate).toLocaleDateString()}</p>
+          <div className="mt-2">
+            <span className={`px-2 py-1 rounded text-sm font-medium ${
+              tournament.status === 'completed' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'
+            }`}>
+              {tournament.status === 'completed' ? 'Completed' : 'Ongoing'}
+            </span>
+          </div>
+        </div>
+        <div className="flex gap-2">
+          {tournament.status !== 'completed' ? (
+            <form action={endTournament}>
+              <Button variant="destructive" type="submit">End Tournament</Button>
+            </form>
+          ) : (
+            <form action={reopenTournament}>
+              <Button variant="outline" type="submit">Reopen Tournament</Button>
+            </form>
+          )}
+        </div>
       </div>
 
       <Tabs defaultValue="setup" className="w-full">

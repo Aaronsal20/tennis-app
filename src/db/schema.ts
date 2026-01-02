@@ -4,7 +4,7 @@ import { relations } from "drizzle-orm";
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   name: text("name"),
-  email: text("email").notNull(),
+  email: text("email"),
   password: text("password"),
   phone: text("phone"),
   role: text("role").default("user").notNull(), // 'admin' or 'user'
@@ -19,6 +19,7 @@ export const tournaments = pgTable("tournaments", {
   startDate: timestamp("start_date").notNull(),
   endDate: timestamp("end_date").notNull(),
   location: text("location"),
+  status: text("status").default("ongoing").notNull(), // 'upcoming', 'ongoing', 'completed'
   createdAt: timestamp("created_at").defaultNow(),
 });
 

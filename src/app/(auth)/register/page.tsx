@@ -18,17 +18,24 @@ export default function RegisterPage() {
     const phone = formData.get("phone") as string;
     const password = formData.get("password") as string;
 
-    if (!email || !password) return;
+    if ((!email && !phone) || !password) {
+      // TODO: Handle error - at least one contact method required
+      return;
+    }
 
     const hashedPassword = await hashPassword(password);
 
     // Check if user already exists (by email or phone)
-    let existingUser = await db.query.users.findFirst({
-      where: or(
-        eq(users.email, email),
-        phone ? eq(users.phone, phone) : undefined
-      ),
-    });
+    const conditions = [];
+    if (email) conditions.push(eq(users.email, email));
+    if (phone) conditions.push(eq(users.phone, phone));
+
+    let existingUser = undefined;
+    if (conditions.length > 0) {
+      existingUser = await db.query.users.findFirst({
+        where: or(...conditions),
+      });
+    }
 
     // If not found by email/phone, check by name to link guest accounts
     if (!existingUser && name) {
@@ -41,8 +48,8 @@ export default function RegisterPage() {
       // Update existing user with new details (e.g. claiming a guest account)
       await db.update(users).set({
         name,
-        email, // Update email in case they matched by phone (replacing dummy email)
-        phone,
+        email: email || existingUser.email,
+        phone: phone || existingUser.phone,
         password: hashedPassword,
       }).where(eq(users.id, existingUser.id));
 
@@ -52,13 +59,13 @@ export default function RegisterPage() {
       // Create new user
       const [newUser] = await db.insert(users).values({
         name,
-        email,
-        phone,
+        email: email || null,
+        phone: phone || null,
         password: hashedPassword,
       }).returning();
 
       if (newUser) {
-        await createNotification("registration", `New user registered: ${name || email}`, { userId: newUser.id });
+        await createNotification("registration", `New user registered: ${name || email || phone}`, { userId: newUser.id });
         await login(newUser.id);
         redirect("/");
       }
@@ -82,17 +89,20 @@ export default function RegisterPage() {
                 <Input id="name" name="name" placeholder="John Doe" required />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input id="email" name="email" type="email" placeholder="m@example.com" required />
+                <Label htmlFor="email">Email (Optional)</Label>
+                <Input id="email" name="email" type="email" placeholder="m@example.com" />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="phone">Phone</Label>
+                <Label htmlFor="phone">Phone (Optional)</Label>
                 <Input id="phone" name="phone" type="tel" placeholder="+1234567890" />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="password">Password</Label>
                 <Input id="password" name="password" type="password" required />
               </div>
+              <p className="text-xs text-muted-foreground">
+                Please provide either an email or a phone number.
+              </p>
               <Button type="submit" className="w-full">
                 Register
               </Button>

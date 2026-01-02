@@ -17,7 +17,9 @@ export default function StandingsTable({ participants, matches }: { participants
   // Calculate standings
   const stats = participants.map(p => {
     const pMatches = matches.filter(m => 
-      (m.participant1Id === p.id || m.participant2Id === p.id) && m.status === "completed"
+      (m.participant1Id === p.id || m.participant2Id === p.id) && 
+      m.status === "completed" &&
+      (m.round === "group" || !m.round) // Only include group stage matches
     );
     const wins = pMatches.filter(m => m.winnerId === p.id).length;
     const losses = pMatches.length - wins;
@@ -49,6 +51,7 @@ export default function StandingsTable({ participants, matches }: { participants
       <Table>
         <TableHeader>
           <TableRow>
+            <TableHead className="w-12 text-center">#</TableHead>
             <TableHead>Player/Team</TableHead>
             <TableHead className="text-center w-12">P</TableHead>
             <TableHead className="text-center w-12">W</TableHead>
@@ -57,21 +60,28 @@ export default function StandingsTable({ participants, matches }: { participants
           </TableRow>
         </TableHeader>
         <TableBody>
-          {stats.map((stat) => (
-            <TableRow key={stat.id}>
-              <TableCell className="font-medium">
-                {stat.user.name}
-                {stat.partner && <span className="text-muted-foreground"> / {stat.partner.name}</span>}
-              </TableCell>
-              <TableCell className="text-center">{stat.played}</TableCell>
-              <TableCell className="text-center">{stat.wins}</TableCell>
-              <TableCell className="text-center">{stat.losses}</TableCell>
-              <TableCell className="text-center font-bold">{stat.points}</TableCell>
-            </TableRow>
-          ))}
+          {stats.map((stat, index) => {
+            const isQualified = index < 4;
+            return (
+              <TableRow key={stat.id} className={isQualified ? "bg-green-50/50" : ""}>
+                <TableCell className="text-center text-muted-foreground text-xs">
+                  {index + 1}
+                  {isQualified && <div className="text-[10px] font-bold text-green-600 uppercase">Q</div>}
+                </TableCell>
+                <TableCell className="font-medium">
+                  {stat.user.name}
+                  {stat.partner && <span className="text-muted-foreground"> / {stat.partner.name}</span>}
+                </TableCell>
+                <TableCell className="text-center">{stat.played}</TableCell>
+                <TableCell className="text-center">{stat.wins}</TableCell>
+                <TableCell className="text-center">{stat.losses}</TableCell>
+                <TableCell className="text-center font-bold">{stat.points}</TableCell>
+              </TableRow>
+            );
+          })}
           {stats.length === 0 && (
               <TableRow>
-                  <TableCell colSpan={5} className="text-center text-muted-foreground h-24">No participants yet.</TableCell>
+                  <TableCell colSpan={6} className="text-center text-muted-foreground h-24">No participants yet.</TableCell>
               </TableRow>
           )}
         </TableBody>
